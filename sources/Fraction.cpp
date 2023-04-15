@@ -10,12 +10,14 @@ void Fraction::simplify()
     this->setDenominator(this->getDenominator() / gcd);
 }
 
-int Fraction::gcd(int a, int b) const
+int Fraction::gcd(int num1, int num2) const
 {
-    if (a == 0)
-        return b;
-    return gcd(b % a, a);
+    if (num1 == 0)
+        return num2;
+    return gcd(num2 % num1, num1);
 }
+
+
 
 Fraction Fraction::operator+(const Fraction &other) const
 {
@@ -26,8 +28,8 @@ Fraction Fraction::operator+(const Fraction &other) const
 
 Fraction Fraction::operator+(double num) const
 {
-    Fraction f(num);
-    return this->operator+(f);
+    Fraction frac(num);
+    return this->operator+(frac);
 }
 
 Fraction Fraction::operator-(const Fraction &other) const
@@ -39,8 +41,8 @@ Fraction Fraction::operator-(const Fraction &other) const
 
 Fraction Fraction::operator-(double num) const
 {
-    Fraction f(num);
-    return this->operator-(f);
+    Fraction frac(num);
+    return this->operator-(frac);
 }
 
 Fraction Fraction::operator*(const Fraction &other) const
@@ -59,8 +61,8 @@ Fraction Fraction::operator/(const Fraction& other) const{
 }
 
 Fraction Fraction::operator/(double num) const{
-    Fraction f(num);
-    return this->operator/(f);
+    Fraction frac(num);
+    return this->operator/(frac);
 }
 
 bool Fraction::operator==(const Fraction& other) const{
@@ -70,15 +72,15 @@ bool Fraction::operator==(const Fraction& other) const{
 }
 
 bool Fraction::operator==(double num) const{
-    Fraction f(num);
-    return this->operator==(f);
+    Fraction frac(num);
+    return this->operator==(frac);
 }
 
 bool Fraction::operator>(const Fraction& other) const {
-    int thisNum = this->numerator;
-    int otherNum = other.numerator;
-    int thisDen = this->denominator;
-    int otherDen = other.denominator;
+    int thisNum = this->getNumerator();
+    int otherNum = other.getNumerator();
+    int thisDen = this->getDenominator();
+    int otherDen = other.getDenominator();
 
     if (thisDen < 0) {
         thisNum *= -1;
@@ -97,8 +99,8 @@ bool Fraction::operator>(const Fraction& other) const {
 }
 
 bool Fraction::operator>(double num) const{
-    Fraction f(num);
-    return this->operator>(f);
+    Fraction frac(num);
+    return this->operator>(frac);
 }
 
 bool Fraction::operator<(const Fraction& other) const{
@@ -106,8 +108,8 @@ bool Fraction::operator<(const Fraction& other) const{
 }
 
 bool Fraction::operator<(double num) const{
-    Fraction f(num);
-    return this->operator<(f);
+    Fraction frac(num);
+    return this->operator<(frac);
 }
 
 bool Fraction::operator>=(const Fraction& other) const{
@@ -115,8 +117,8 @@ bool Fraction::operator>=(const Fraction& other) const{
 }
 
 bool Fraction::operator>=(double num) const{
-    Fraction f(num);
-    return this->operator>=(f);
+    Fraction frac(num);
+    return this->operator>=(frac);
 }
 
 bool Fraction::operator<=(const Fraction& other) const{
@@ -124,8 +126,8 @@ bool Fraction::operator<=(const Fraction& other) const{
 }
 
 bool Fraction::operator<=(double num) const{
-    Fraction f(num);
-    return this->operator<=(f);
+    Fraction frac(num);
+    return this->operator<=(frac);
 }
 
 Fraction& Fraction::operator++(){
@@ -152,15 +154,15 @@ Fraction Fraction::operator--(int){
     return temp;
 }
 
-std::ostream& ariel::operator<<(std::ostream& os, const Fraction& f) {
-    os << f.getNumerator() << "/" << f.getDenominator();
-    return os;
+std::ostream& ariel::operator<<(std::ostream& ost, const Fraction& frac) {
+    ost << frac.getNumerator() << "/" << frac.getDenominator();
+    return ost;
 }
 
-std::istream& ariel::operator>>(std::istream& is, Fraction& f) {
+std::istream& ariel::operator>>(std::istream& ist, Fraction& frac) {
     // Read the input as a string
     std::string input;
-    is >> input;
+    ist >> input;
 
     // Check if the input contains a '/'
     std::size_t pos = input.find('/');
@@ -183,8 +185,8 @@ std::istream& ariel::operator>>(std::istream& is, Fraction& f) {
     }
 
     // Set the fraction object to the extracted values
-    f = Fraction(num, den);
+    frac = Fraction(num, den);
 
     // Return the input stream
-    return is;
+    return ist;
 }

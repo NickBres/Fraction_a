@@ -1,23 +1,29 @@
 #pragma once
 #include <iostream>
+#include <cmath>
 
-namespace ariel{
+namespace ariel
+{
+    const int MAX_DIGITS = 1000; // for double numbers
 
-    class Fraction{
+    class Fraction
+    {
         int numerator;
         int denominator;
 
         void simplify();
-        int gcd(int a, int b) const;
+        int gcd(int num1, int num2) const;
 
     public:
-
-        Fraction(int numerator, int denominator = 1){
-            if (denominator == 0){
+        Fraction(int numerator = 0, int denominator = 1)
+        {
+            if (denominator == 0)
+            {
                 throw std::invalid_argument("Denominator can't be 0");
                 exit(1);
             }
-            if (denominator < 0){
+            if (denominator < 0) // if denominator is negative, move the sign to the numerator, also avoid two negative signs in the fraction
+            {
                 numerator *= -1;
                 denominator *= -1;
             }
@@ -26,71 +32,72 @@ namespace ariel{
             this->simplify();
         };
 
-        Fraction(double num){
-            int numInt = static_cast<int>(num * 1000);
-            double numRound = static_cast<double>(numInt) / 1000;
-            if (numRound != num){
+        Fraction(double num)
+        {
+            int numInt = static_cast<int>(std::round(num * MAX_DIGITS));
+            double numRound = static_cast<double>(numInt) / MAX_DIGITS;
+            if (numRound != num)
+            {
                 throw std::invalid_argument("Double number has more than 3 digits after decimal point");
-                exit(1); 
+                exit(1);
             }
-            this->numerator = num * 1000;
-            this->denominator = 1000;
+            this->numerator = numInt;
+            this->denominator = MAX_DIGITS;
             this->simplify();
-        };
+        }
 
-        Fraction(){
-            this->numerator = 0;
-            this->denominator = 1;
-        };
-
-        Fraction operator+(const Fraction& other) const;
+        Fraction operator+(const Fraction &other) const;
         Fraction operator+(double num) const;
 
-        Fraction operator-(const Fraction& other) const;
+        Fraction operator-(const Fraction &other) const;
         Fraction operator-(double num) const;
 
-        Fraction operator*(const Fraction& other) const;
-        friend Fraction operator*(double num, const Fraction& frac); // different because order is matter
+        Fraction operator*(const Fraction &other) const;
+        friend Fraction operator*(double num, const Fraction &frac); // different because order is matter
 
-        Fraction operator/(const Fraction& other) const;
+        Fraction operator/(const Fraction &other) const;
         Fraction operator/(double num) const;
 
-        bool operator==(const Fraction& other) const;
+        bool operator==(const Fraction &other) const;
         bool operator==(double num) const;
 
-        bool operator>(const Fraction& other) const;
+        bool operator>(const Fraction &other) const;
         bool operator>(double num) const;
 
-        bool operator<(const Fraction& other) const;
+        bool operator<(const Fraction &other) const;
         bool operator<(double num) const;
-        
-        bool operator>=(const Fraction& other) const;
+
+        bool operator>=(const Fraction &other) const;
         bool operator>=(double num) const;
 
-        bool operator<=(const Fraction& other) const;
+        bool operator<=(const Fraction &other) const;
         bool operator<=(double num) const;
 
-        Fraction& operator++();
+        Fraction &operator++();
         Fraction operator++(int);
 
-        Fraction& operator--();
+        Fraction &operator--();
         Fraction operator--(int);
 
-        friend std::ostream& operator<<(std::ostream& os,const Fraction& f);
-        friend std::istream& operator>>(std::istream& is, Fraction& f);
+        friend std::ostream &operator<<(std::ostream &ost, const Fraction &frac);
+        friend std::istream &operator>>(std::istream &ist, Fraction &frac);
 
-        int getNumerator() const{
+        int getNumerator() const
+        {
             return this->numerator;
         };
-        int getDenominator() const{
+        int getDenominator() const
+        {
             return this->denominator;
         };
-        void setNumerator(int num){
+        void setNumerator(int num)
+        {
             this->numerator = num;
         };
-        void setDenominator(int den){
+        void setDenominator(int den)
+        {
             this->denominator = den;
         };
     };
-    
+
 };
