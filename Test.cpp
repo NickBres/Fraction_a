@@ -1,6 +1,6 @@
 #include "doctest.h"
 #include "sources/Fraction.hpp"
-#include <iostream>
+#include <sstream>
 #include <string>
 
 using namespace ariel;
@@ -241,11 +241,19 @@ TEST_CASE("--"){
     CHECK((f3).getDenominator() == 1);
 }
 
-TEST_CASE("<<"){
-
+TEST_CASE("<<") {
+    Fraction f(1, 2);
+    std::stringstream ss;
+    ss << f;
+    CHECK(ss.str() == "1/2");
 }
 
-TEST_CASE(">>"){
-
+TEST_CASE(">>") {
+    std::stringstream ss("1/2");
+    Fraction f;
+    ss >> f;
+    CHECK(f.getNumerator() == 1);
+    CHECK(f.getDenominator() == 2);
 }
+
 
