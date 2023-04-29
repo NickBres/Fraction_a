@@ -2,10 +2,46 @@
 
 using namespace ariel;
 
+void Fraction::check_overflow(int num1, int num2, const char *operation) const
+{
+    if (strcmp(operation, "add") == 0)
+    {
+        if (num1 > 0 && num2 > 0 && num1 > INT_MAX - num2)
+        {
+            throw std::overflow_error("Overflow error");
+        }
+        else if (num1 < 0 && num2 < 0 && num1 < INT_MIN - num2)
+        {
+            throw std::overflow_error("Overflow error");
+        }
+    }
+
+    if (strcmp(operation, "multiply") == 0)
+    {
+        if (num1 > 0 && num2 > 0 && num1 > INT_MAX / num2)
+        {
+            throw std::overflow_error("Overflow error");
+        }
+        else if (num1 > 0 && num2 < 0 && num2 < INT_MIN / num1)
+        {
+            throw std::overflow_error("Overflow error");
+        }
+        else if (num1 < 0 && num2 > 0 && num1 < INT_MIN / num2)
+        {
+            throw std::overflow_error("Overflow error");
+        }
+        else if (num1 < 0 && num2 < 0 && (num1 < INT_MAX / num2 || num2 < INT_MAX / num1))
+        {
+            throw std::overflow_error("Overflow error");
+        }
+    }
+}
+
 void Fraction::simplify()
 {
     int gcd = this->gcd(this->getNumerator(), this->getDenominator());
-    if (gcd == -1) gcd = 1;
+    if (gcd < 0)
+        gcd *= -1;
     this->setNumerator(this->getNumerator() / gcd);
     this->setDenominator(this->getDenominator() / gcd);
 }
@@ -17,12 +53,38 @@ int Fraction::gcd(int num1, int num2) const
     return gcd(num2 % num1, num1);
 }
 
-
+int Fraction::mcd(int num1, int num2) const
+{
+    int i = num1 > num2 ? num1 : num2;
+    bool found = false;
+    while (!found)
+    {
+        if (i % num1 == 0 && i % num2 == 0)
+        {
+            found = true;
+        }
+        else
+        {
+            this->check_overflow(i, num1 > num2 ? num1 : num2, "add");
+            i += num1 > num2 ? num1 : num2;
+        }
+    }
+    return i;
+}
 
 Fraction Fraction::operator+(const Fraction &other) const
 {
-    int newDenominator = this->getDenominator() * other.getDenominator();
-    int newNumerator = this->getNumerator() * other.getDenominator() + other.getNumerator() * this->getDenominator();
+    int newDenominator = this->mcd(this->getDenominator(), other.getDenominator());
+
+    this->check_overflow(this->getNumerator(), newDenominator / this->getDenominator(), "multiply");
+    int newNumerator1 = this->getNumerator() * (newDenominator / this->getDenominator());
+
+    this->check_overflow(other.getNumerator(), newDenominator / other.getDenominator(), "multiply");
+    int newNumerator2 = other.getNumerator() * (newDenominator / other.getDenominator());
+
+    this->check_overflow(newNumerator1, newNumerator2, "add");
+    int newNumerator = newNumerator1 + newNumerator2;
+
     return Fraction(newNumerator, newDenominator);
 }
 
@@ -32,11 +94,16 @@ Fraction Fraction::operator+(double num) const
     return this->operator+(frac);
 }
 
+Fraction ariel::operator+(double num, const Fraction &frac)
+{
+    return Fraction(num) + frac;
+}
+
 Fraction Fraction::operator-(const Fraction &other) const
 {
-    int newDenominator = this->getDenominator() * other.getDenominator();
-    int newNumerator = this->getNumerator() * other.getDenominator() - other.getNumerator() * this->getDenominator();
-    return Fraction(newNumerator, newDenominator);
+    this->check_overflow(other.getNumerator(), -1, "multiply");
+    Fraction flipped(other.getNumerator() * -1, other.getDenominator());
+    return this->operator+(flipped);
 }
 
 Fraction Fraction::operator-(double num) const
@@ -45,49 +112,86 @@ Fraction Fraction::operator-(double num) const
     return this->operator-(frac);
 }
 
+Fraction ariel::operator-(double num, const Fraction &frac)
+{
+    return Fraction(num) - frac;
+}
+
 Fraction Fraction::operator*(const Fraction &other) const
 {
-    return Fraction(this->getNumerator() * other.getNumerator(), this->getDenominator() * other.getDenominator());
+
+    check_overflow(this->getNumerator(), other.getNumerator(), "multiply");
+    int newNumerator = this->getNumerator() * other.getNumerator();
+
+    check_overflow(this->getDenominator(), other.getDenominator(), "multiply");
+    int newDenominator = this->getDenominator() * other.getDenominator();
+
+    return Fraction(newNumerator, newDenominator);
+}
+
+Fraction Fraction::operator*(double num) const
+{
+    Fraction frac(num);
+    return this->operator*(frac);
 }
 
 Fraction ariel::operator*(double num, const Fraction &frac)
 {
-    return Fraction(frac.getNumerator() * num, frac.getDenominator());
+    return Fraction(num) * frac;
 }
 
-Fraction Fraction::operator/(const Fraction& other) const{
-    Fraction flipped(other.getDenominator(),other.getNumerator());
+Fraction Fraction::operator/(const Fraction &other) const
+{
+    if (other.getNumerator() == 0)
+        throw std::runtime_error("Division by zero");
+    Fraction flipped(other.getDenominator(), other.getNumerator());
     return this->operator*(flipped);
 }
 
-Fraction Fraction::operator/(double num) const{
+Fraction ariel::operator/(double num, const Fraction &frac)
+{
+    return Fraction(num) / frac;
+}
+
+Fraction Fraction::operator/(double num) const
+{
     Fraction frac(num);
     return this->operator/(frac);
 }
 
-bool Fraction::operator==(const Fraction& other) const{
-    if (this->getNumerator() != other.getNumerator()) return false;
-    if (this->getDenominator() != other.getDenominator()) return false;
-    return true;
+bool Fraction::operator==(const Fraction &other) const
+{
+    if (this->getNumerator() == 0 && other.getNumerator() == 0)
+        return true;
+    return this->getNumerator() == other.getNumerator() && this->getDenominator() == other.getDenominator();
 }
 
-bool Fraction::operator==(double num) const{
+bool Fraction::operator==(double num) const
+{
     Fraction frac(num);
     return this->operator==(frac);
 }
 
-bool Fraction::operator>(const Fraction& other) const {
+bool ariel::operator==(double num, const Fraction &frac)
+{
+    return Fraction(num) == frac;
+}
+
+bool Fraction::operator>(const Fraction &other) const
+{
     int thisNum = this->getNumerator();
     int otherNum = other.getNumerator();
     int thisDen = this->getDenominator();
     int otherDen = other.getDenominator();
 
-    if (thisDen < 0) {
+    if (thisDen < 0)
+    {
         thisNum *= -1;
         thisDen *= -1;
     }
 
-    if (otherDen < 0) {
+    if (otherDen < 0)
+    {
         otherNum *= -1;
         otherDen *= -1;
     }
@@ -98,95 +202,113 @@ bool Fraction::operator>(const Fraction& other) const {
     return lhs > rhs;
 }
 
-bool Fraction::operator>(double num) const{
+bool ariel::operator>(double num, const Fraction &frac)
+{
+    return Fraction(num) > frac;
+}
+
+bool Fraction::operator>(double num) const
+{
     Fraction frac(num);
     return this->operator>(frac);
 }
 
-bool Fraction::operator<(const Fraction& other) const{
+bool Fraction::operator<(const Fraction &other) const
+{
     return !(this->operator==(other) or this->operator>(other));
 }
 
-bool Fraction::operator<(double num) const{
+bool ariel::operator<(double num, const Fraction &frac)
+{
+    return Fraction(num) < frac;
+}
+
+bool Fraction::operator<(double num) const
+{
     Fraction frac(num);
     return this->operator<(frac);
 }
 
-bool Fraction::operator>=(const Fraction& other) const{
+bool Fraction::operator>=(const Fraction &other) const
+{
     return this->operator==(other) or this->operator>(other);
 }
 
-bool Fraction::operator>=(double num) const{
+bool ariel::operator>=(double num, const Fraction &frac)
+{
+    return Fraction(num) >= frac;
+}
+
+bool Fraction::operator>=(double num) const
+{
     Fraction frac(num);
     return this->operator>=(frac);
 }
 
-bool Fraction::operator<=(const Fraction& other) const{
+bool Fraction::operator<=(const Fraction &other) const
+{
     return this->operator==(other) or this->operator<(other);
 }
 
-bool Fraction::operator<=(double num) const{
+bool ariel::operator<=(double num, const Fraction &frac)
+{
+    return Fraction(num) <= frac;
+}
+
+bool Fraction::operator<=(double num) const
+{
     Fraction frac(num);
     return this->operator<=(frac);
 }
 
-Fraction& Fraction::operator++(){
+Fraction &Fraction::operator++()
+{
     this->setNumerator(this->operator+(1).getNumerator());
     this->setDenominator(this->operator+(1).getDenominator());
     return *this;
 }
 
-Fraction Fraction::operator++(int){
+Fraction Fraction::operator++(int)
+{
     Fraction temp = *this;
     this->operator++();
     return temp;
 }
 
-Fraction& Fraction::operator--(){
+Fraction &Fraction::operator--()
+{
     this->setNumerator(this->operator-(1).getNumerator());
     this->setDenominator(this->operator-(1).getDenominator());
     return *this;
 }
 
-Fraction Fraction::operator--(int){
+Fraction Fraction::operator--(int)
+{
     Fraction temp = *this;
     this->operator--();
     return temp;
 }
 
-std::ostream& ariel::operator<<(std::ostream& ost, const Fraction& frac) {
+std::ostream &ariel::operator<<(std::ostream &ost, const Fraction &frac)
+{
     ost << frac.getNumerator() << "/" << frac.getDenominator();
     return ost;
 }
 
-std::istream& ariel::operator>>(std::istream& ist, Fraction& frac) {
-    // Read the input as a string
-    std::string input;
-    ist >> input;
-
-    // Check if the input contains a '/'
-    std::size_t pos = input.find('/');
-    if (pos == std::string::npos) {
-        // Invalid input format, throw an exception
-        throw std::invalid_argument("Invalid input format. Expected 'numerator/denominator'");
+std::istream &ariel::operator>>(std::istream &ist, Fraction &frac)
+{
+    int num = 0, den = 0;
+    ist >> num >> den;
+    if (ist.fail() || den == 0)
+    {
+        throw std::runtime_error("Invalid input");
     }
-
-    // Extract the numerator and denominator as integers
-    std::string num_str = input.substr(0, pos);
-    std::string den_str = input.substr(pos + 1);
-    int num, den;
-    try {
-        num = std::stoi(num_str);
-        den = std::stoi(den_str);
+    if (den < 0) // if denominator is negative, move the sign to the numerator, also avoid two negative signs in the fraction
+    {
+        num *= -1;
+        den *= -1;
     }
-    catch (const std::invalid_argument&) {
-        // Invalid input format, throw an exception
-        throw std::invalid_argument("Invalid input format. Expected 'numerator/denominator'");
-    }
-
-    // Set the fraction object to the extracted values
-    frac = Fraction(num, den);
-
-    // Return the input stream
+    frac.setNumerator(num);
+    frac.setDenominator(den);
     return ist;
 }
