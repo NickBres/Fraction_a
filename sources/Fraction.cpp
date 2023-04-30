@@ -46,6 +46,13 @@ void Fraction::simplify()
     this->setDenominator(this->getDenominator() / gcd);
 }
 
+Fraction Fraction::rounded() const
+{
+    int roundedNumerator = round(MAX_DIGITS * static_cast<double>(this->getNumerator()) / this->getDenominator());
+    int roundedDenominator = MAX_DIGITS;
+    return Fraction(roundedNumerator, roundedDenominator);
+} 
+
 int Fraction::gcd(int num1, int num2) const
 {
     if (num1 == 0)
@@ -163,18 +170,21 @@ bool Fraction::operator==(const Fraction &other) const
 {
     if (this->getNumerator() == 0 && other.getNumerator() == 0)
         return true;
-    return this->getNumerator() == other.getNumerator() && this->getDenominator() == other.getDenominator();
+    
+    Fraction thisFrac = this->rounded();
+    Fraction otherFrac = other.rounded();
+    return thisFrac.getNumerator() == otherFrac.getNumerator() && thisFrac.getDenominator() == otherFrac.getDenominator();
 }
 
 bool Fraction::operator==(double num) const
 {
     Fraction frac(num);
-    return this->operator==(frac);
+    return this->rounded()==(frac);
 }
 
 bool ariel::operator==(double num, const Fraction &frac)
 {
-    return Fraction(num) == frac;
+    return Fraction(num) == frac.rounded();
 }
 
 bool Fraction::operator>(const Fraction &other) const

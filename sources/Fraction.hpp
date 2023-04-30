@@ -20,25 +20,27 @@ namespace ariel
         int denominator;
 
         void simplify();
+        Fraction rounded() const;
         int gcd(int num1, int num2) const;
         int mcd(int num1, int num2) const;
         void check_overflow(int num1, int num2, const char *operation) const;
 
     public:
-        Fraction(int numerator = 0, int denominator = 1)
+        Fraction(int numerator = 0, const int denominator = 1)
         {
             if (denominator == 0)
             {
                 throw std::invalid_argument("Denominator cannot be 0");
                 exit(1);
             }
-            if (denominator < 0) // if denominator is negative, move the sign to the numerator, also avoid two negative signs in the fraction
-            {
-                numerator *= -1;
-                denominator *= -1;
-            }
+            
             this->numerator = numerator;
             this->denominator = denominator;
+            if (this->denominator < 0) // if denominator is negative, move the sign to the numerator, also avoid two negative signs in the fraction
+            {
+                this->numerator *= -1;
+                this->denominator *= -1;
+            }
             this->simplify();
         };
 
