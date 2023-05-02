@@ -2,6 +2,54 @@
 
 using namespace ariel;
 
+Fraction::Fraction(int numerator,int denominator)
+{
+    if (denominator == 0)
+    {
+        throw std::invalid_argument("Denominator cannot be 0");
+        exit(1);
+    }
+
+    this->numerator = numerator;
+    this->denominator = denominator;
+    if (this->denominator < 0) // if denominator is negative, move the sign to the numerator, also avoid two negative signs in the fraction
+    {
+        this->numerator *= -1;
+        this->denominator *= -1;
+    }
+    this->simplify();
+};
+
+Fraction::Fraction(double num) : denominator(MAX_DIGITS)
+{
+    int numInt = static_cast<int>(std::round(num * MAX_DIGITS));
+    // double numRound = static_cast<double>(numInt) / MAX_DIGITS;
+    //  if (numRound != num)
+    //  {
+    //      throw std::invalid_argument("Double number has more than 3 digits after decimal point");
+    //      exit(1);
+    //  }
+    this->numerator = numInt;
+    this->simplify();
+}
+
+int Fraction::getNumerator() const
+{
+    return this->numerator;
+};
+int Fraction::getDenominator() const
+{
+    return this->denominator;
+};
+void Fraction::setNumerator(int num)
+{
+    this->numerator = num;
+};
+void Fraction::setDenominator(int den)
+{
+    this->denominator = den;
+};
+
 void Fraction::check_overflow(int num1, int num2, const char *operation) const
 {
     if (strcmp(operation, "add") == 0)
@@ -51,7 +99,7 @@ Fraction Fraction::rounded() const
     int roundedNumerator = round(MAX_DIGITS * static_cast<double>(this->getNumerator()) / this->getDenominator());
     int roundedDenominator = MAX_DIGITS;
     return Fraction(roundedNumerator, roundedDenominator);
-} 
+}
 
 int Fraction::gcd(int num1, int num2) const
 {
@@ -170,7 +218,7 @@ bool Fraction::operator==(const Fraction &other) const
 {
     if (this->getNumerator() == 0 && other.getNumerator() == 0)
         return true;
-    
+
     Fraction thisFrac = this->rounded();
     Fraction otherFrac = other.rounded();
     return thisFrac.getNumerator() == otherFrac.getNumerator() && thisFrac.getDenominator() == otherFrac.getDenominator();
@@ -179,7 +227,7 @@ bool Fraction::operator==(const Fraction &other) const
 bool Fraction::operator==(double num) const
 {
     Fraction frac(num);
-    return this->rounded()==(frac);
+    return this->rounded() == (frac);
 }
 
 bool ariel::operator==(double num, const Fraction &frac)
